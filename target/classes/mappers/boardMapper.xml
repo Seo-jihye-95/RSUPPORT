@@ -1,0 +1,92 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+  PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+  "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+  
+<mapper namespace="kr.co.mapper.BoardMapper">
+ 
+   <!-- 리스트 조회 -->
+<!--    <select id="boardList" resultType="kr.co.vo.BoardVO">
+   		<![CDATA[
+   		 SELECT * FROM RS_BOARD WHERE BNO > 0
+   		 order by regdate desc
+		]]>
+   	</select> -->
+   	
+   <!-- 리스트 조회 페이징 -->
+   <select id="boardList" resultType="kr.co.vo.BoardVO">
+   		<![CDATA[
+   		SELECT 
+   			rnum
+   		 	,bno
+			,title
+			,content
+			,writer
+			,regdate
+			,updatedate 
+		FROM 
+			( 
+			SELECT 
+				ROW_NUMBER() OVER(ORDER BY BNO) AS RNUM
+				,bno
+				,title
+				,content
+				,writer
+				,regdate
+				,updatedate
+			FROM
+				RS_BOARD 
+			WHERE ROWNUM <= #{pageNum} * #{amount}
+			)
+		WHERE rnum > (#{pageNum} -1) * #{amount}
+		]]>
+   	</select>
+   	
+   	<!--  게시물 갯수 -->
+	<select id="getTotalCount" resultType="int">
+		SELECT COUNT(*) FROM RS_BOARD WHERE BNO > 0
+	</select>
+	
+	
+	<!-- bno 값을 미리 생성하여 게시물 입력 -->
+	<insert id="registerSelectKey">
+		<selectKey keyProperty="bno" order="BEFORE" resultType="int">
+			SELECT SEQ_RS_BOARD.nextval FROM DUAL
+		</selectKey>
+		INSERT INTO RS_BOARD
+		(
+			bno
+			,title
+			,content
+			,writer
+		)
+		VALUES
+		(
+			#{bno}
+			, #{title}
+			, #{content}
+			, #{writer}
+		)
+	</insert>
+	
+	<!-- 게시글 조회 -->
+	<select id="read" resultType="kr.co.vo.BoardVO">
+		SELECT * FROM RS_BOARD WHERE BNO = #{bno}
+	</select>
+	
+	<!-- 게시글 삭제 -->
+	<delete id="delete">
+		DELETE FROM RS_BOARD WHERE BNO = #{bno}
+	</delete>
+	
+	<!-- 게시글 수정 -->
+	<update id="update">
+		UPDATE RS_BOARD SET
+			TITLE = #{title},
+			CONTENT = #{content},
+			WRITER = #{writer},
+			UPDATEDATE = sysdate
+		WHERE BNO = #{bno}
+	</update>
+	
+</mapper>
